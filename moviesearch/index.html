@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CineVerse - Cyberpunk Media Search</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Exo+2:wght@300;600&display=swap" rel="stylesheet" >
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="cyber-gradient"></div>
+    
+    <div class="trailer-modal" id="trailerModal">
+        <span class="close-modal" onclick="closeTrailer()">✕</span>
+        <iframe class="trailer-iframe" 
+                frameborder="0" 
+                allowfullscreen
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture">
+        </iframe>
+    </div>
+
+    <header class="header">
+        <div class="scanline"></div>
+        <h1>CineVerse Pro</h1>
+        <div class="search-container">
+            <input 
+                type="text" 
+                class="search-input" 
+                placeholder="Search movies and TV series..."
+                id="searchInput"
+            >
+        </div>
+    </header>
+
+    <main>
+        <div class="content-switcher">
+            <div class="trending-section" id="trendingSection">
+                <h2 class="trending-header" id="trendingHeader">🔥 Trending Movies</h2>
+                <div class="nav-tabs">
+                    <button class="nav-button active" data-type="movie">Movies</button>
+                    <button class="nav-button" data-type="tv">TV Series</button>
+                </div>
+                <div class="movies-grid" id="trendingGrid"></div>
+            </div>
+
+            <div class="search-results-section" id="searchSection" style="display: none;">
+                <div class="search-header">
+                    <h2 class="trending-header" id="searchHeader"></h2>
+                    <button class="clear-search" onclick="clearSearch()">← Back to Trending</button>
+                </div>
+                <div class="movies-grid" id="searchResultsGrid"></div>
+                <div class="empty-state" id="emptyState"></div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const TMDB_API_KEY = 'ee52fa8c405ddb195788314451c0cd9e';
+        const MEDIA_TYPES = { MOVIE: 'movie', TV: 'tv' };
+        let currentMediaType = MEDIA_TYPES.MOVIE;
+
+        // Media Card Creator
+        function createMediaCard(item, mediaType) {
+            const card = document.createElement('div');
+            card.className = 'movie-card';
+            
+            const title = mediaType === MEDIA_TYPES.MOVIE ? item.title : item.name;
+            const date = mediaType === MEDIA_TYPES.MOVIE ? 
+                item.release_date : item.first_air_date;
+            const year = date ? new Date(date).getFullYear() : null;
+
+            card.innerHTML = `
+                <div class="trailer-overlay">
+                    <div class="play-button"></div>
+                </div>
+                <div class="media-type-badge">
+                    ${mediaType === MEDIA_TYPES.MOVIE ? '🎬 Movie' : '📺 Series'}
+                </div>
+                <img src="${item.poster_path ? 
+                    `https://image.tmdb.org/t/p/w500${item.poster_path}` : 
+                    'https://via.placeholder.com/300x450?text=No+Poster'}" 
+                    class="movie-poster" 
+                    alt="${title}">
+                <div class="movie-info">
+                    <div class="holo-badge">${item.vote_average?.toFixed(1) || 'N/A'}/10</div>
+                    <h2 class="movie-title">${title} ${year ? `(${year})` : ''}</h2>
+                    <p class="movie-overview">${item.overview || 'No description available'}</p>
+                    ${mediaType === MEDIA_TYPES.TV ? `
+                        <div class="tv-info">
+                            <span>${item.number_of_seasons || 'N/A'} Seasons</span>
+                            <span>${item.number_of_episodes || 'N/A'} Episodes</span>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+
+            // Trailer Handlers
+            const overlay = card.querySelector('.trailer-overlay');
+            let trailerTimeout;
+
+            card.addEventListener('mouseenter', async () => {
+                trailerTimeout = setTimeout(async () => {
+                    const trailerKey = await fetchTrailer(item.id, mediaType);
+                    if(trailerKey) overlay.style.display = 'grid';
+                }, 500);
+            });
+
+            card.addEventListener('mouseleave', () => {
+                clearTimeout(trailerTimeout);
+                overlay.style.display = 'none';
+            });
+
+            overlay.addEventListener('click', () => playTrailer(item.id, mediaType));
+
+            return card;
+        }
+
+        // API Functions
+        async function fetchTrending(mediaType) {
+            try {
+                const response = await fetch(
+                    `https://api.themoviedb.org/3/trending/${mediaType}/day?api_key=${TMDB_API_KEY}`
+                );
+                return (await response.json()).results;
+            } catch (error) {
+                console.error('Error fetching trending:', error);
+                return [];
+            }
+        }
+
+        async function searchMedia(query) {
+            const trendingSection = document.getElementById('trendingSection');
+            const searchSection = document.getElementById('searchSection');
+            const searchHeader = document.getElementById('searchHeader');
+            
+            trendingSection.style.display = 'none';
+            searchSection.style.display = 'block';
+            searchHeader.textContent = `Results for "${query}"`;
+
+            try {
+                const response = await fetch(
+                    `https://api.themoviedb.org/3/search/${currentMediaType}?api_key=${TMDB_API_KEY}&query=${query}`
+                );
+                const results = (await response.json()).results;
+                
+                const searchGrid = document.getElementById('searchResultsGrid');
+                const emptyState = document.getElementById('emptyState');
+                
+                searchGrid.innerHTML = '';
+                if(results.length === 0) {
+                    emptyState.textContent = `No results found for "${query}" 🔍`;
+                    emptyState.style.display = 'block';
+                } else {
+                    emptyState.style.display = 'none';
+                    results.forEach(item => {
+                        searchGrid.appendChild(createMediaCard(item, currentMediaType));
+                    });
+                }
+            } catch (error) {
+                console.error('Search error:', error);
+            }
+        }
+
+        async function fetchTrailer(mediaId, mediaType) {
+            try {
+                const response = await fetch(
+                    `https://api.themoviedb.org/3/${mediaType}/${mediaId}/videos?api_key=${TMDB_API_KEY}`
+                );
+                const videos = (await response.json()).results;
+                return videos.find(v => v.type === 'Trailer' && v.site === 'YouTube')?.key;
+            } catch (error) {
+                console.error('Trailer error:', error);
+                return null;
+            }
+        }
+
+        // UI Functions
+        function playTrailer(mediaId, mediaType) {
+            const modal = document.getElementById('trailerModal');
+            const iframe = modal.querySelector('iframe');
+            
+            fetchTrailer(mediaId, mediaType).then(key => {
+                if(key) {
+                    iframe.src = `https://www.youtube.com/embed/${key}?autoplay=1&mute=1`;
+                    modal.style.display = 'grid';
+                }
+            });
+        }
+
+        function closeTrailer() {
+            const modal = document.getElementById('trailerModal');
+            const iframe = modal.querySelector('iframe');
+            iframe.src = '';
+            modal.style.display = 'none';
+        }
+
+        function clearSearch() {
+            const searchInput = document.getElementById('searchInput');
+            const trendingSection = document.getElementById('trendingSection');
+            const searchSection = document.getElementById('searchSection');
+            
+            searchInput.value = '';
+            trendingSection.style.display = 'block';
+            searchSection.style.display = 'none';
+            document.getElementById('searchResultsGrid').innerHTML = '';
+            document.getElementById('emptyState').textContent = '';
+        }
+
+        // Event Listeners
+        document.querySelectorAll('.nav-button').forEach(button => {
+            button.addEventListener('click', async () => {
+                document.querySelectorAll('.nav-button').forEach(b => b.classList.remove('active'));
+                button.classList.add('active');
+                currentMediaType = button.dataset.type;
+                
+                document.getElementById('trendingHeader').textContent = 
+                    `🔥 Trending ${currentMediaType === 'movie' ? 'Movies' : 'TV Series'}`;
+                
+                const trendingGrid = document.getElementById('trendingGrid');
+                trendingGrid.innerHTML = '<div class="empty-state">Loading... ⚡</div>';
+                
+                const trending = await fetchTrending(currentMediaType);
+                trendingGrid.innerHTML = '';
+                trending.forEach(item => {
+                    trendingGrid.appendChild(createMediaCard(item, currentMediaType));
+                });
+            });
+        });
+
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            clearTimeout(window.searchTimeout);
+            window.searchTimeout = setTimeout(() => {
+                const query = e.target.value.trim();
+                if(query) {
+                    searchMedia(query);
+                } else {
+                    clearSearch();
+                }
+            }, 500);
+        });
+
+        // Initial Load
+        document.addEventListener('DOMContentLoaded', async () => {
+            const trendingMovies = await fetchTrending(MEDIA_TYPES.MOVIE);
+            const trendingGrid = document.getElementById('trendingGrid');
+            trendingGrid.innerHTML = '';
+            trendingMovies.forEach(movie => {
+                trendingGrid.appendChild(createMediaCard(movie, MEDIA_TYPES.MOVIE));
+            });
+        });
+
+        // Close modal on outside click
+        window.onclick = (event) => {
+            if(event.target === document.getElementById('trailerModal')) {
+                closeTrailer();
+            }
+        };
+    </script>
+</body>
+</html>
