@@ -3,191 +3,275 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thumbnail Portfolio</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/css/lightbox.min.css">
+    <title>Tadiyos Amare | Thumbnail Designer</title>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
         }
 
         body {
-            background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+            background: #0a0a0a;
             color: #fff;
-            font-family: 'Arial', sans-serif;
+            overflow-x: hidden;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem;
+        .hero {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at center, #1f1f1f 0%, #0a0a0a 100%);
+            position: relative;
         }
 
-        h1 {
+        .hero h1 {
+            font-size: 3.5rem;
             text-align: center;
-            font-size: 3rem;
-            margin-bottom: 2rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            background: linear-gradient(45deg, #00ff87, #60efff);
+            line-height: 1.1;
+            background: linear-gradient(45deg, #fff 30%, #888 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
             padding: 2rem;
-        }
-
-        .thumbnail {
-            position: relative;
-            overflow: hidden;
+            border: 2px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
             border-radius: 15px;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .gallery {
+            padding: 4rem 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2.5rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .thumbnail-card {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            cursor: pointer;
             aspect-ratio: 16/9;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.1);
         }
 
-        .thumbnail:hover {
-            transform: scale(1.05);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
-            z-index: 2;
+        .thumbnail-card:hover {
+            transform: translateY(-5px) scale(1.03);
+            background: rgba(255,255,255,0.05);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
         }
 
-        .thumbnail img {
+        .thumbnail-card img {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transition: transform 0.3s ease;
+            transition: 0.4s ease;
+            position: relative;
         }
 
-        .thumbnail:hover img {
-            transform: scale(1.1);
-        }
-
-        .caption {
+        .card-content {
             position: absolute;
             bottom: 0;
             left: 0;
             right: 0;
-            padding: 1rem;
-            background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
-            color: white;
-            transform: translateY(100%);
-            transition: transform 0.3s ease;
+            padding: 1.5rem;
+            background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.9) 100%);
+            opacity: 0;
+            transition: 0.3s ease;
         }
 
-        .thumbnail:hover .caption {
-            transform: translateY(0);
+        .thumbnail-card:hover .card-content {
+            opacity: 1;
+        }
+
+        .category-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            padding: 2rem 0;
+            position: sticky;
+            top: 0;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+        }
+
+        .category-btn {
+            padding: 0.8rem 1.5rem;
+            border-radius: 25px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: transparent;
+            color: #fff;
+            cursor: pointer;
+            transition: 0.3s ease;
+        }
+
+        .category-btn.active {
+            background: linear-gradient(45deg, #ff4d4d, #ffb347);
+            border-color: transparent;
+        }
+
+        .thumbnail-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255,255,255,0.2),
+                transparent
+            );
+            transition: 0.5s;
+        }
+
+        .thumbnail-card:hover::before {
+            left: 100%;
         }
 
         @media (max-width: 768px) {
-            .grid {
-                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            .gallery {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1.5rem;
+                padding: 2rem 1rem;
             }
-        }
 
-        /* Loading animation */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .grid {
-            animation: fadeIn 0.8s ease-out;
+            .hero h1 {
+                font-size: 2rem;
+                padding: 1.5rem;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>THUMBNAILS MADE BY TADIYOS AMARE</h1>
-        <div class="grid">
-            <!-- Replace these image sources with your actual thumbnail paths -->
-            <a href="Untitled (4).png" data-lightbox="portfolio" class="thumbnail">
-                <img src="Untitled (4).png" alt="Thumbnail 1">
-                <div class="caption">
-                    <h3>JAKE PAUL VS MIKE</h3>
-                    <p>SPORTS</p>
-                </div>
-            </a>
-            
-            <a href="Untitled (5).png" data-lightbox="portfolio" class="thumbnail">
-                <img src="Untitled (5).png" alt="Thumbnail 2">
-                <div class="caption">
-                    <h3>Project Title 2</h3>
-                    <p>Category / Description</p>
-                </div>
-            </a>
-            <a href="Untitled (6).png" data-lightbox="portfolio" class="thumbnail">
-                <img src="Untitled (6).png" alt="Thumbnail 1">
-                <div class="caption">
-                    <h3>Project Title 1</h3>
-                    <p>Category / Description</p>
-                </div>
-            </a>
-            <a href="Untitled (7).png" data-lightbox="portfolio" class="thumbnail">
-                <img src="Untitled (7).png" alt="Thumbnail 1">
-                <div class="caption">
-                    <h3>Project Title 1</h3>
-                    <p>Category / Description</p>
-                </div>
-            </a>
-            <a href="penguuu (1).png" data-lightbox="portfolio" class="thumbnail">
-                <img src="penguuu (1).png" alt="Thumbnail 1">
-                <div class="caption">
-                    <h3>Project Title 1</h3>
-                    <p>Category / Description</p>
-                </div>
-            </a>
-            <a href="penguuu (2).png" data-lightbox="portfolio" class="thumbnail">
-                <img src="penguuu (2).png" alt="Thumbnail 1">
-                <div class="caption">
-                    <h3>Project Title 1</h3>
-                    <p>Category / Description</p>
-                </div>
-            </a>
-            <a href="penguuu (3).png" data-lightbox="portfolio" class="thumbnail">
-                <img src="penguuu (3).png" alt="Thumbnail 1">
-                <div class="caption">
-                    <h3>Project Title 1</h3>
-                    <p>Category / Description</p>
-                </div>
-            </a>
-            <a href="NEWW (1).png" data-lightbox="portfolio" class="thumbnail">
-                <img src="NEWW (1).png" alt="Thumbnail 1">
-                <div class="caption">
-                    <h3>Project Title 1</h3>
-                    <p>Category / Description</p>
-                </div>
-            </a>
-            <a href="NEWW (2).png" data-lightbox="portfolio" class="thumbnail">
-                <img src="NEWW (2).png" alt="Thumbnail 1">
-                <div class="caption">
-                    <h3>Project Title 1</h3>
-                    <p>Category / Description</p>
-                </div>
-            </a>
-            <a href="KDOT.png.png" data-lightbox="portfolio" class="thumbnail">
-                <img src="KDOT.png" alt="Thumbnail 1">
-                <div class="caption">
-                    <h3>Project Title 1</h3>
-                    <p>Category / Description</p>
-                </div>
-            </a>
-            <!-- Add more thumbnails following the same pattern -->
-        </div>
+    <section class="hero">
+        <h1 data-aos="fade-up">Tadiyos Amare<br><span style="font-size: 1.2rem; letter-spacing: 0.3rem;">THUMBNAIL ARTIST</span><br><span style="font-size: 1.2rem; letter-spacing: 0.3rem;">Scroll down to see my work</span></h1>
+    </section>
+
+    <div class="category-tabs">
+        
+        <button class="category-btn" data-category="youtube">YouTube</button>
+   
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/js/lightbox-plus-jquery.min.js"></script>
+    <section class="gallery">
+        <div class="thumbnail-card" data-category="youtube" data-aos="fade-up">
+            <img src="penguuu (1).png" alt="Design Sample">
+            <div class="card-content">
+                <h4>review</h4>
+                <p>2k+ Views</p>
+            </div>
+        </div>
+        <!-- Add more thumbnail cards with appropriate data-category -->
+    </section>
+    <section class="gallery">
+        <div class="thumbnail-card" data-category="youtube" data-aos="fade-up">
+            <img src="Untitled (6).png" alt="Design Sample">
+            <div class="card-content">
+                <h4>sports</h4>
+                <p>7k+ Views</p>
+            </div>
+        </div>
+        <!-- Add more thumbnail cards with appropriate data-category -->
+    </section>
+    <section class="gallery">
+        <div class="thumbnail-card" data-category="youtube" data-aos="fade-up">
+            <img src="Untitled (4).png" alt="Design Sample">
+            <div class="card-content">
+                <h4>boxing</h4>
+                <p>6k+ Views</p>
+            </div>
+        </div>
+        <!-- Add more thumbnail cards with appropriate data-category -->
+    </section>
+</section>
+<section class="gallery">
+    <div class="thumbnail-card" data-category="youtube" data-aos="fade-up">
+        <img src="Screenshot 2025-02-19 080542.png" alt="Design Sample">
+        <div class="card-content">
+            <h4>review</h4>
+            <p>20k+ Views</p>
+        </div>
+    </div>
+    <!-- Add more thumbnail cards with appropriate data-category -->
+</section>
+</section>
+<section class="gallery">
+    <div class="thumbnail-card" data-category="youtube" data-aos="fade-up">
+        <img src="Untitled (12).png" alt="Design Sample">
+        <div class="card-content">
+            <h4>politics</h4>
+            <p>1k+ Views</p>
+        </div>
+    </div>
+    <!-- Add more thumbnail cards with appropriate data-category -->
+</section>
+</section>
+<section class="gallery">
+    <div class="thumbnail-card" data-category="youtube" data-aos="fade-up">
+        <img src="itss.png" alt="Design Sample">
+        <div class="card-content">
+            <h4>tutorial</h4>
+            <p>500+ Views</p>
+        </div>
+    </div>
+    <!-- Add more thumbnail cards with appropriate data-category -->
+</section>
+<section class="gallery">
+    <div class="thumbnail-card" data-category="youtube" data-aos="fade-up">
+        <img src="sync.png" alt="Design Sample">
+        <div class="card-content">
+            <h4>tutorial</h4>
+            <p>800+ Views</p>
+        </div>
+    </div>
+    <!-- Add more thumbnail cards with appropriate data-category -->
+</section>
+<section class="gallery">
+    <div class="thumbnail-card" data-category="youtube" data-aos="fade-up">
+        <img src="atyou.png" alt="Design Sample">
+        <div class="card-content">
+            <h4>tutorial</h4>
+            <p>900+ Views</p>
+        </div>
+    </div>
+    <!-- Add more thumbnail cards with appropriate data-category -->
+</section>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
-        lightbox.option({
-            'resizeDuration': 200,
-            'wrapAround': true,
-            'alwaysShowNavOnTouchDevices': true,
-            'fadeDuration': 300,
-            'imageFadeDuration': 300
+        AOS.init({
+            duration: 800,
+            once: true
+        });
+
+        // Add filtering functionality
+        const filterBtns = document.querySelectorAll('.category-btn');
+        const thumbnailCards = document.querySelectorAll('.thumbnail-card');
+
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Remove active class from all buttons
+                filterBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                const category = btn.dataset.category;
+                
+                thumbnailCards.forEach(card => {
+                    if(category === 'all' || card.dataset.category === category) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
         });
     </script>
 </body>
